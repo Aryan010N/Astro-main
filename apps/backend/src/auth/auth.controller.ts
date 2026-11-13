@@ -13,6 +13,7 @@ import { RequestOtpDto } from './dto/request-otp.dto.js';
 import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 import { VerifyFirebaseTokenDto } from './dto/verify-firebase-token.dto.js';
 import { RefreshTokenDto } from './dto/refresh-token.dto.js';
+import { AdminLoginDto } from './dto/admin-login.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 
@@ -43,6 +44,14 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Firebase token verified, returns backend JWT and user profile' })
   async firebaseLogin(@Body() dto: VerifyFirebaseTokenDto) {
     return this.authService.verifyFirebaseToken(dto);
+  }
+
+  @Post('admin/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Admin email/password login, returns JWT with role admin' })
+  @ApiResponse({ status: 200, description: 'Admin authenticated successfully' })
+  async adminLogin(@Body() dto: AdminLoginDto) {
+    return this.authService.adminLogin(dto);
   }
 
   @Post('refresh')

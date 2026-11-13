@@ -49,7 +49,15 @@ android/app/build/
 .DS_Store
 Thumbs.db
 
+# Next.js
+.next/
+out/
+
+# TypeScript
+*.tsbuildinfo
+
 # Docker volumes & local data
 pgdata/
 dump.rdb
+
 

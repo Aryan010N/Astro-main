@@ -7,13 +7,14 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RedisService } from '../redis/redis.service.js';
 import { FirebaseAdminService } from './firebase-admin.service.js';
 import { RequestOtpDto } from './dto/request-otp.dto.js';
 import { VerifyOtpDto } from './dto/verify-otp.dto.js';
 import { VerifyFirebaseTokenDto } from './dto/verify-firebase-token.dto.js';
+import { AdminLoginDto } from './dto/admin-login.dto.js';
 
 @Injectable()
 export class AuthService {
@@ -222,6 +223,45 @@ export class AuthService {
       accessToken,
       tokenType: 'Bearer',
       expiresIn: 900,
+    };
+  }
+
+  /**
+   * Admin email/password login
+   */
+  async adminLogin(dto: AdminLoginDto) {
+    const { email, password } = dto;
+    const passwordHash = createHash('sha256').update(password).digest('hex');
+
+    let admin = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    // If default admin doesn't exist, bootstrap default admin
+    if (!admin && email === 'admin@astro.com') {
+      admin = await this.prisma.user.create({
+        data: {
+          email,
+          phoneNumber: '+910000000000',
+          passwordHash,
+          role: UserRole.ADMIN,
+          name: 'Super Admin',
+        },
+      });
+      this.logger.log(`Created default Super Admin account (${email})`);
+    } else if (!admin || admin.passwordHash !== passwordHash || admin.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('Invalid admin credentials');
+    }
+
+    const tokens = await this.issueTokens(admin.id, admin.phoneNumber, admin.role);
+    return {
+      ...tokens,
+      user: {
+        id: admin.id,
+        email: admin.email,
+        name: admin.name,
+        role: admin.role,
+      },
     };
   }
 

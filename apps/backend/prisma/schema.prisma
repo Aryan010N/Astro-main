@@ -16,9 +16,19 @@ enum UserRole {
   @@map("user_role")
 }
 
+enum KycStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+
+  @@map("kyc_status")
+}
+
 model User {
   id            String    @id @default(uuid()) @db.Uuid
   phoneNumber   String    @unique @map("phone_number")
+  email         String?   @unique @map("email")
+  passwordHash  String?   @map("password_hash")
   role          UserRole  @default(USER)
   name          String?   @map("name")
   dateOfBirth   DateTime? @map("date_of_birth")
@@ -31,9 +41,38 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   wallet        Wallet?
+  expertProfile ExpertProfile?
   refreshTokens RefreshToken[]
 
   @@map("users")
+}
+
+model ExpertProfile {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @unique @map("user_id") @db.Uuid
+  name             String    @map("name")
+  email            String?   @map("email")
+  bio              String?   @map("bio")
+  experienceYears  Int       @default(0) @map("experience_years")
+  languages        String[]  @default([]) @map("languages")
+  expertise        String[]  @default([]) @map("expertise")
+  idProofType      String?   @map("id_proof_type")
+  idProofNumber    String?   @map("id_proof_number")
+  idProofUrl       String?   @map("id_proof_url")
+  payoutUpiId      String?   @map("payout_upi_id")
+  chatRateInPaise  BigInt    @default(0) @map("chat_rate_in_paise")
+  callRateInPaise  BigInt    @default(0) @map("call_rate_in_paise")
+  videoRateInPaise BigInt    @default(0) @map("video_rate_in_paise")
+  kycStatus        KycStatus @default(PENDING) @map("kyc_status")
+  rejectionReason  String?   @map("rejection_reason")
+  isLive           Boolean   @default(false) @map("is_live")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([kycStatus])
+  @@map("expert_profiles")
 }
 
 model Wallet {
@@ -62,4 +101,3 @@ model RefreshToken {
   @@index([userId])
   @@map("refresh_tokens")
 }
-
