@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER          @map("user")
+  EXPERT        @map("expert")
+  ADMIN         @map("admin")
+  SUPPORT_AGENT @map("support_agent")
+
+  @@map("user_role")
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  phoneNumber   String    @unique @map("phone_number")
+  role          UserRole  @default(USER)
+  name          String?   @map("name")
+  dateOfBirth   DateTime? @map("date_of_birth")
+  timeOfBirth   String?   @map("time_of_birth")
+  placeOfBirth  String?   @map("place_of_birth")
+  gender        String?   @map("gender")
+  avatarUrl     String?   @map("avatar_url")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  wallet        Wallet?
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @map("user_id") @db.Uuid
+  balanceInPaise BigInt   @default(0) @map("balance_in_paise")
+  currency       String   @default("INR") @map("currency")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique @map("token")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false) @map("revoked")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+

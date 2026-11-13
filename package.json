@@ -1,0 +1,15 @@
+{
+  "name": "astro-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Astrology consultation marketplace monorepo",
+  "scripts": {
+    "docker:up": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infra/docker/docker-compose.yml down",
+    "backend:dev": "pnpm --filter backend start:dev",
+    "backend:build": "pnpm --filter backend build"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}

@@ -1,0 +1,17 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+allowBuilds:
+  '@firebase/util': true
+  '@scarf/scarf': true
+  esbuild: true
+  protobufjs: true
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@scarf/scarf'
+  - 'esbuild'
+  - 'protobufjs'
+  - 'prisma'
+  - '@prisma/client'
+  - '@prisma/engines'
