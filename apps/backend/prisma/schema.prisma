@@ -24,23 +24,53 @@ enum KycStatus {
   @@map("kyc_status")
 }
 
+enum TransactionType {
+  RECHARGE           @map("recharge")
+  SESSION_CHARGE     @map("session_charge")
+  SESSION_REFUND     @map("session_refund")
+  COMMISSION_EARNING @map("commission_earning")
+  PAYOUT             @map("payout")
+  MANUAL_ADJUSTMENT  @map("manual_adjustment")
+
+  @@map("transaction_type")
+}
+
+enum TransactionStatus {
+  PENDING  @map("pending")
+  SUCCESS  @map("success")
+  FAILED   @map("failed")
+  REVERSED @map("reversed")
+
+  @@map("transaction_status")
+}
+
+enum PaymentOrderStatus {
+  CREATED   @map("created")
+  ATTEMPTED @map("attempted")
+  PAID      @map("paid")
+  FAILED    @map("failed")
+
+  @@map("payment_order_status")
+}
+
 model User {
-  id            String    @id @default(uuid()) @db.Uuid
-  phoneNumber   String    @unique @map("phone_number")
-  email         String?   @unique @map("email")
-  passwordHash  String?   @map("password_hash")
-  role          UserRole  @default(USER)
-  name          String?   @map("name")
-  dateOfBirth   DateTime? @map("date_of_birth")
-  timeOfBirth   String?   @map("time_of_birth")
-  placeOfBirth  String?   @map("place_of_birth")
-  gender        String?   @map("gender")
-  avatarUrl     String?   @map("avatar_url")
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  phoneNumber  String    @unique @map("phone_number")
+  email        String?   @unique @map("email")
+  passwordHash String?   @map("password_hash")
+  role         UserRole  @default(USER)
+  name         String?   @map("name")
+  dateOfBirth  DateTime? @map("date_of_birth")
+  timeOfBirth  String?   @map("time_of_birth")
+  placeOfBirth String?   @map("place_of_birth")
+  gender       String?   @map("gender")
+  avatarUrl    String?   @map("avatar_url")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   wallet        Wallet?
+  paymentOrders PaymentOrder[]
   expertProfile ExpertProfile?
   refreshTokens RefreshToken[]
 
@@ -83,9 +113,63 @@ model Wallet {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletLedgerEntry[]
 
   @@map("wallets")
+}
+
+model WalletLedgerEntry {
+  id                     String            @id @default(uuid()) @db.Uuid
+  walletId               String            @map("wallet_id") @db.Uuid
+  amountInPaise          BigInt            @map("amount_in_paise")
+  type                   TransactionType   @map("type")
+  status                 TransactionStatus @default(PENDING) @map("status")
+  runningBalanceSnapshot BigInt            @map("running_balance_snapshot")
+  referenceId            String?           @map("reference_id")
+  idempotencyKey         String?           @unique @map("idempotency_key")
+  description            String?           @map("description")
+  metadata               Json?             @map("metadata")
+  createdAt              DateTime          @default(now()) @map("created_at")
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt(sort: Desc)])
+  @@index([referenceId])
+  @@map("wallet_ledger")
+}
+
+model PaymentOrder {
+  id            String             @id @default(uuid()) @db.Uuid
+  userId        String             @map("user_id") @db.Uuid
+  orderId       String             @unique @map("order_id")
+  amountInPaise BigInt             @map("amount_in_paise")
+  currency      String             @default("INR") @map("currency")
+  receipt       String             @map("receipt")
+  status        PaymentOrderStatus @default(CREATED) @map("status")
+  paymentId     String?            @map("payment_id")
+  signature     String?            @map("signature")
+  notes         Json?              @map("notes")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("payment_orders")
+}
+
+model PaymentWebhookEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @unique @map("event_id")
+  eventType String   @map("event_type")
+  payload   Json     @map("payload")
+  status    String   @default("PROCESSED") @map("status")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventType])
+  @@map("payment_webhook_events")
 }
 
 model RefreshToken {
@@ -98,6 +182,5 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
   @@map("refresh_tokens")
 }

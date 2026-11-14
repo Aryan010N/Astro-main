@@ -575,3 +575,4 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen> {
     );
   }
 }
+

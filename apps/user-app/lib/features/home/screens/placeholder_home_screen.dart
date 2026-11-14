@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../wallet/widgets/wallet_balance_chip.dart';
 
 class PlaceholderHomeScreen extends ConsumerWidget {
   const PlaceholderHomeScreen({super.key});
@@ -33,6 +34,8 @@ class PlaceholderHomeScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          const WalletBalanceChip(),
+          const SizedBox(width: 8),
           IconButton(
             tooltip: 'Sign Out',
             icon: const Icon(Icons.logout, color: AppTheme.textSecondary),
@@ -40,6 +43,7 @@ class PlaceholderHomeScreen extends ConsumerWidget {
               await ref.read(authStateProvider.notifier).signOut();
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SafeArea(

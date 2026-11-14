@@ -18,5 +18,11 @@ class ApiConstants {
   static const String firebaseLogin = '/auth/firebase-login';
   static const String refreshToken = '/auth/refresh';
   static const String getMe = '/auth/me';
+
+  // Wallet Endpoints (Phase 3)
+  static const String walletBalance = '/wallet/balance';
+  static const String walletTransactions = '/wallet/transactions';
+  static const String walletCreateOrder = '/wallet/recharge/create-order';
+  static const String walletSimulatePayment = '/wallet/simulate-payment';
 }
 

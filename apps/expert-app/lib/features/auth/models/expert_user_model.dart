@@ -33,3 +33,4 @@ class ExpertUserModel {
 
   bool get isApprovedExpert => role == 'EXPERT';
 }
+

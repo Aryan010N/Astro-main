@@ -135,3 +135,4 @@ class KycNotifier extends Notifier<KycState> {
 final kycStateProvider = NotifierProvider<KycNotifier, KycState>(() {
   return KycNotifier();
 });
+

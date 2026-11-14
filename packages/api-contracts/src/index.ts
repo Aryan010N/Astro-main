@@ -2,6 +2,18 @@ export type UserRole = 'user' | 'expert' | 'admin' | 'support_agent';
 
 export type KycStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+export type TransactionType =
+  | 'RECHARGE'
+  | 'SESSION_CHARGE'
+  | 'SESSION_REFUND'
+  | 'COMMISSION_EARNING'
+  | 'PAYOUT'
+  | 'MANUAL_ADJUSTMENT';
+
+export type TransactionStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'REVERSED';
+
+export type PaymentOrderStatus = 'CREATED' | 'ATTEMPTED' | 'PAID' | 'FAILED';
+
 export interface UserDto {
   id: string;
   phoneNumber: string;
@@ -68,4 +80,48 @@ export interface SubmitKycDto {
 export interface ReviewKycDto {
   action: 'APPROVE' | 'REJECT';
   rejectionReason?: string;
+}
+
+// ==========================================
+// Phase 3 — Wallet & Payment Contracts
+// ==========================================
+
+export interface CreateRechargeOrderDto {
+  amountInPaise: number; // e.g. 50000 paise = ₹500
+}
+
+export interface RechargeOrderResponseDto {
+  orderId: string;
+  amountInPaise: number;
+  amountInRupees: number;
+  currency: string;
+  keyId: string;
+  receipt: string;
+}
+
+export interface WalletTransactionDto {
+  id: string;
+  walletId: string;
+  amountInPaise: string;
+  amountInRupees: number;
+  type: TransactionType;
+  status: TransactionStatus;
+  runningBalanceSnapshot: string;
+  runningBalanceInRupees: number;
+  referenceId?: string | null;
+  description?: string | null;
+  createdAt: string;
+}
+
+export interface WalletTransactionsResponseDto {
+  balanceInPaise: string;
+  balanceInRupees: number;
+  currency: string;
+  transactions: WalletTransactionDto[];
+}
+
+export interface SimulatePaymentDto {
+  orderId: string;
+  status: 'captured' | 'failed';
+  paymentId?: string;
 }

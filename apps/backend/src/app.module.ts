@@ -5,6 +5,7 @@ import { RedisModule } from './redis/redis.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ExpertsModule } from './experts/experts.module.js';
 import { AdminModule } from './admin/admin.module.js';
+import { WalletModule } from './wallet/wallet.module.js';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AdminModule } from './admin/admin.module.js';
     AuthModule,
     ExpertsModule,
     AdminModule,
+    WalletModule,
   ],
 })
 export class AppModule {}

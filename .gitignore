@@ -59,5 +59,7 @@ out/
 # Docker volumes & local data
 pgdata/
 dump.rdb
+scratch/
+
 
 

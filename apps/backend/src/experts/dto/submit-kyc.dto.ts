@@ -70,3 +70,4 @@ export class SubmitKycDto {
   @Min(100)
   videoRateInPaise: number;
 }
+

@@ -244,8 +244,8 @@ Following `astro-app-project-phases.md`:
 | **Phase 0** | Planning, tech stack selection & architecture specification | Completed |
 | **Phase 1** | Design system tokens (`packages/flutter-shared`) & information architecture | Completed |
 | **Phase 2** | Monorepo scaffolding, Auth service, Expert KYC & Admin approval workflows | Completed |
-| **Phase 3** | Wallet ledger, recharge slabs, payment gateway integration & webhooks | Up Next |
-| **Phase 4** | Redis presence tracking, heartbeat system, and astrologer availability | Planned |
+| **Phase 3** | Wallet ledger, recharge slabs, Razorpay API integration & webhooks | Completed |
+| **Phase 4** | Redis presence tracking, heartbeat system, and 1:1 session/billing engine | Up Next |
 | **Phase 5** | 1:1 Consultation engine (Chat MVP, per-minute billing state machine) | Planned |
 | **Phase 6** | Audio & Video calling infrastructure (Agora integration) | Planned |
 | **Phase 7** | Ratings, reviews, sorting algorithms & search discovery | Planned |
@@ -255,7 +255,19 @@ Following `astro-app-project-phases.md`:
 
 ---
 
-## 9. License
+## 9. Payment Gateway & Wallet Ledger Mechanics (Phase 3)
+
+The financial infrastructure is engineered according to strict transactional consistency rules:
+- **Append-Only Ledger (`wallet_ledger`):** No direct balance mutation occurs outside of an atomic ledger entry. Every credit or debit records `amount_in_paise`, transaction `type`, `reference_id`, and a `running_balance_snapshot`.
+- **HMAC SHA256 Webhook Verification:** The `/webhooks/payment` endpoint verifies incoming payloads against the `RAZORPAY_WEBHOOK_SECRET` using timing-safe comparisons.
+- **Webhook Idempotency:** The gateway's event ID (`x-razorpay-event-id`) is stored with a unique constraint in `payment_webhook_events`. Redelivered events return HTTP 200 immediately without double-crediting.
+- **Concurrency & Overdraft Prevention:** Deductions lock the target wallet row using `SELECT ... FOR UPDATE` inside a database transaction, guaranteeing that concurrent session charges never over-draft the balance below zero.
+- **Pending Integrations Checklist:** See [`TODO.md`](file:///c:/Astro-l/TODO.md) for the exact environment variables and SDK calls to swap once live Razorpay merchant credentials are provided.
+
+---
+
+## 10. License
 
 Proprietary — All Rights Reserved.  
 Unauthorized copying, modification, distribution, or public display of this codebase is strictly prohibited.
+

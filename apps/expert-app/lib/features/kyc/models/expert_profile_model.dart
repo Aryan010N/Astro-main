@@ -79,3 +79,4 @@ class ExpertProfileModel {
   int get callRateInRupees => callRateInPaise ~/ 100;
   int get videoRateInRupees => videoRateInPaise ~/ 100;
 }
+
