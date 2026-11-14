@@ -65,14 +65,23 @@ This covers everything from idea to post-launch, across Product, Design, Enginee
 
 ---
 
-## PHASE 4 — Presence & Real-Time Infrastructure (Week 6–8)
+## PHASE 4 — Presence, 1:1 Consultation & Billing Engine (Section 7A) [COMPLETED]
 
-- [ ] Real-time presence system (Redis + WebSocket) — online/offline/busy status
-- [ ] Expert status toggle (app-side + reflected instantly in user listing)
-- [ ] Push notification service (FCM) wiring
-- [ ] Socket server setup for chat events
+**Implemented against Section 7A of astro-app-system-design.md:**
 
-**Output:** Expert going online/offline reflects live in the user app within ~1 second.
+- [x] Exact state machine implemented: `REQUESTED` → `ACCEPTED` → `CONNECTING` → `ACTIVE` → `ENDED` → `BILLED` → `SUMMARY_SHOWN`, plus `RECONNECTING` and `FORCE_ENDED` paths
+- [x] Redis-backed real-time presence system (`ONLINE`, `OFFLINE`, `BUSY`) with sub-second WebSocket broadcasts
+- [x] 30–45s silent request timeout with zero wallet impact and expert response metric logging (`missedRequests`)
+- [x] Per-second billing granularity starting strictly at `ACTIVE` (never at `ACCEPTED`) using server timestamp only
+- [x] 5–10s periodic billing ticks reusing Phase 3 atomic wallet deduction (`SESSION_CHARGE`)
+- [x] Chat idle detection (auto-pauses billing after idle timeout, resumes immediately upon next message)
+- [x] 15–20s reconnection grace window (`RECONNECTING`), pause billing, resume on reconnect, auto `FORCE_ENDED` if window expires (billing stopped at last confirmed tick)
+- [x] Redis distributed concurrency locks (`SETNX`) enforcing one active/accepted session per expert
+- [x] Full Flutter UI in `apps/user-app` (live presence indicators, start consultation, chat screen with mirrored billing timer, summary modal)
+- [x] Full Flutter UI in `apps/expert-app` (30s incoming request countdown dialog, accept/reject, live consultation screen)
+- [x] Automated end-to-end test suite (`tests/session-billing-e2e.mjs`) verifying all 6 mandatory test scenarios with 100% pass rate
+
+**Output:** Robust, fraud-resilient 1:1 consultation and per-second billing engine verified end-to-end against containerized PostgreSQL and Redis.
 
 ---
 

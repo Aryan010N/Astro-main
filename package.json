@@ -10,6 +10,7 @@
     "backend:build": "pnpm --filter backend build"
   },
   "devDependencies": {
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "socket.io-client": "^4.8.4"
   }
 }

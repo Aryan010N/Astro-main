@@ -6,6 +6,8 @@ import '../../auth/providers/auth_provider.dart';
 import '../models/expert_profile_model.dart';
 import '../providers/kyc_provider.dart';
 import 'kyc_form_screen.dart';
+import '../../session/providers/expert_session_provider.dart';
+import '../../session/screens/incoming_request_dialog.dart';
 
 class KycStatusScreen extends ConsumerStatefulWidget {
   final ExpertProfileModel profile;
@@ -29,6 +31,18 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen> {
   Widget build(BuildContext context) {
     final kycState = ref.watch(kycStateProvider);
     final profile = kycState.profile ?? widget.profile;
+    final sessionState = ref.watch(expertSessionProvider);
+    final incomingReq = sessionState.incomingRequest;
+
+    if (incomingReq != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => IncomingRequestDialog(request: incomingReq),
+        );
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.midnightBackground,
@@ -238,6 +252,7 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen> {
                 inactiveTrackColor: AppTheme.midnightCard,
                 onChanged: (val) {
                   setState(() => _isOnline = val);
+                  ref.read(expertSessionProvider.notifier).setPresence(val ? 'ONLINE' : 'OFFLINE');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(

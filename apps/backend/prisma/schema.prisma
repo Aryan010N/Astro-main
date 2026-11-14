@@ -53,6 +53,29 @@ enum PaymentOrderStatus {
   @@map("payment_order_status")
 }
 
+enum SessionStatus {
+  REQUESTED
+  ACCEPTED
+  CANCELLED
+  CONNECTING
+  ACTIVE
+  RECONNECTING
+  ENDED
+  FORCE_ENDED
+  BILLED
+  SUMMARY_SHOWN
+
+  @@map("session_status")
+}
+
+enum SessionType {
+  CHAT
+  AUDIO
+  VIDEO
+
+  @@map("session_type")
+}
+
 model User {
   id           String    @id @default(uuid()) @db.Uuid
   phoneNumber  String    @unique @map("phone_number")
@@ -73,36 +96,84 @@ model User {
   paymentOrders PaymentOrder[]
   expertProfile ExpertProfile?
   refreshTokens RefreshToken[]
+  userSessions  ConsultationSession[] @relation("UserSessions")
 
   @@map("users")
 }
 
 model ExpertProfile {
-  id               String    @id @default(uuid()) @db.Uuid
-  userId           String    @unique @map("user_id") @db.Uuid
-  name             String    @map("name")
-  email            String?   @map("email")
-  bio              String?   @map("bio")
-  experienceYears  Int       @default(0) @map("experience_years")
-  languages        String[]  @default([]) @map("languages")
-  expertise        String[]  @default([]) @map("expertise")
-  idProofType      String?   @map("id_proof_type")
-  idProofNumber    String?   @map("id_proof_number")
-  idProofUrl       String?   @map("id_proof_url")
-  payoutUpiId      String?   @map("payout_upi_id")
-  chatRateInPaise  BigInt    @default(0) @map("chat_rate_in_paise")
-  callRateInPaise  BigInt    @default(0) @map("call_rate_in_paise")
-  videoRateInPaise BigInt    @default(0) @map("video_rate_in_paise")
-  kycStatus        KycStatus @default(PENDING) @map("kyc_status")
-  rejectionReason  String?   @map("rejection_reason")
-  isLive           Boolean   @default(false) @map("is_live")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id                 String                @id @default(uuid()) @db.Uuid
+  userId             String                @unique @map("user_id") @db.Uuid
+  name               String                @map("name")
+  email              String?               @map("email")
+  bio                String?               @map("bio")
+  experienceYears    Int                   @default(0) @map("experience_years")
+  languages          String[]              @default([]) @map("languages")
+  expertise          String[]              @default([]) @map("expertise")
+  idProofType        String?               @map("id_proof_type")
+  idProofNumber      String?               @map("id_proof_number")
+  idProofUrl         String?               @map("id_proof_url")
+  payoutUpiId        String?               @map("payout_upi_id")
+  chatRateInPaise    BigInt                @default(0) @map("chat_rate_in_paise")
+  callRateInPaise    BigInt                @default(0) @map("call_rate_in_paise")
+  videoRateInPaise   BigInt                @default(0) @map("video_rate_in_paise")
+  kycStatus          KycStatus             @default(PENDING) @map("kyc_status")
+  rejectionReason    String?               @map("rejection_reason")
+  isLive             Boolean               @default(false) @map("is_live")
+  totalConsultations Int                   @default(0) @map("total_consultations")
+  rating             Float                 @default(5.0) @map("rating")
+  missedRequests     Int                   @default(0) @map("missed_requests")
+  averageResponseSec Float                 @default(0.0) @map("average_response_sec")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expertSessions ConsultationSession[] @relation("ExpertSessions")
 
   @@index([kycStatus])
   @@map("expert_profiles")
+}
+
+model ConsultationSession {
+  id               String        @id @default(uuid()) @db.Uuid
+  userId           String        @map("user_id") @db.Uuid
+  expertId         String        @map("expert_id") @db.Uuid
+  sessionType      SessionType   @default(CHAT) @map("session_type")
+  status           SessionStatus @default(REQUESTED) @map("status")
+  rateInPaise      BigInt        @map("rate_in_paise")
+  durationSeconds  Int           @default(0) @map("duration_seconds")
+  totalBilledPaise BigInt        @default(0) @map("total_billed_paise")
+  requestedAt      DateTime      @default(now()) @map("requested_at")
+  acceptedAt       DateTime?     @map("accepted_at")
+  startedAt        DateTime?     @map("started_at")
+  endedAt          DateTime?     @map("ended_at")
+  rejectionReason  String?       @map("rejection_reason")
+  endReason        String?       @map("end_reason")
+  metadata         Json?         @map("metadata")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  user     User             @relation("UserSessions", fields: [userId], references: [id], onDelete: Cascade)
+  expert   ExpertProfile    @relation("ExpertSessions", fields: [expertId], references: [id], onDelete: Cascade)
+  messages SessionMessage[]
+
+  @@index([userId, status])
+  @@index([expertId, status])
+  @@map("consultation_sessions")
+}
+
+model SessionMessage {
+  id         String   @id @default(uuid()) @db.Uuid
+  sessionId  String   @map("session_id") @db.Uuid
+  senderId   String   @map("sender_id") @db.Uuid
+  senderRole String   @map("sender_role")
+  text       String   @map("text")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  session ConsultationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt(sort: Asc)])
+  @@map("session_messages")
 }
 
 model Wallet {

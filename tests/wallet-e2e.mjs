@@ -65,7 +65,7 @@ async function runPhase3Tests() {
 
   // 1. Authenticate test user
   console.log('\n--- Step 1: User Login via Mobile OTP ---');
-  const userPhone = '+919988776655';
+  const userPhone = '+9199' + Math.floor(10000000 + Math.random() * 90000000);
   const reqOtp = await makeRequest({
     hostname: '127.0.0.1',
     port: 3000,

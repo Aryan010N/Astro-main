@@ -57,6 +57,10 @@ export interface ExpertProfileDto {
   kycStatus: KycStatus;
   rejectionReason?: string | null;
   isLive: boolean;
+  totalConsultations?: number;
+  rating?: number;
+  missedRequests?: number;
+  presenceStatus?: 'ONLINE' | 'OFFLINE' | 'BUSY';
   createdAt: string;
   updatedAt: string;
   user?: UserDto;
@@ -82,12 +86,9 @@ export interface ReviewKycDto {
   rejectionReason?: string;
 }
 
-// ==========================================
 // Phase 3 — Wallet & Payment Contracts
-// ==========================================
-
 export interface CreateRechargeOrderDto {
-  amountInPaise: number; // e.g. 50000 paise = ₹500
+  amountInPaise: number;
 }
 
 export interface RechargeOrderResponseDto {
@@ -124,4 +125,74 @@ export interface SimulatePaymentDto {
   orderId: string;
   status: 'captured' | 'failed';
   paymentId?: string;
+}
+
+// ==========================================
+// Phase 4 — Session & Presence Contracts
+// ==========================================
+
+export type ExpertPresenceStatus = 'ONLINE' | 'OFFLINE' | 'BUSY';
+
+export type SessionStatus =
+  | 'REQUESTED'
+  | 'ACCEPTED'
+  | 'CANCELLED'
+  | 'CONNECTING'
+  | 'ACTIVE'
+  | 'RECONNECTING'
+  | 'ENDED'
+  | 'FORCE_ENDED'
+  | 'BILLED'
+  | 'SUMMARY_SHOWN';
+
+export type SessionType = 'CHAT' | 'AUDIO' | 'VIDEO';
+
+export interface RequestSessionDto {
+  expertId: string;
+  sessionType?: SessionType;
+}
+
+export interface SessionResponseDto {
+  id: string;
+  userId: string;
+  expertId: string;
+  sessionType: SessionType;
+  status: SessionStatus;
+  rateInPaise: string;
+  rateInRupees: number;
+  durationSeconds: number;
+  totalBilledPaise: string;
+  totalBilledRupees: number;
+  requestedAt: string;
+  acceptedAt?: string | null;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  endReason?: string | null;
+  user?: UserDto;
+  expert?: ExpertProfileDto;
+}
+
+export interface SessionSummaryDto {
+  sessionId: string;
+  durationSeconds: number;
+  totalBilledPaise: string;
+  totalBilledRupees: number;
+  ratePerMinuteRupees: number;
+  startedAt?: string | null;
+  endedAt: string;
+  endReason: string;
+}
+
+export interface ChatMessageDto {
+  id: string;
+  sessionId: string;
+  senderId: string;
+  senderRole: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface PresenceUpdateEventDto {
+  expertId: string;
+  status: ExpertPresenceStatus;
 }

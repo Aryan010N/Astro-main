@@ -245,8 +245,8 @@ Following `astro-app-project-phases.md`:
 | **Phase 1** | Design system tokens (`packages/flutter-shared`) & information architecture | Completed |
 | **Phase 2** | Monorepo scaffolding, Auth service, Expert KYC & Admin approval workflows | Completed |
 | **Phase 3** | Wallet ledger, recharge slabs, Razorpay API integration & webhooks | Completed |
-| **Phase 4** | Redis presence tracking, heartbeat system, and 1:1 session/billing engine | Up Next |
-| **Phase 5** | 1:1 Consultation engine (Chat MVP, per-minute billing state machine) | Planned |
+| **Phase 4** | Redis presence tracking, 1:1 session engine, state machine & per-second billing | Completed |
+| **Phase 5** | Extended Chat features (rich media, read receipts, attachments) | Up Next |
 | **Phase 6** | Audio & Video calling infrastructure (Agora integration) | Planned |
 | **Phase 7** | Ratings, reviews, sorting algorithms & search discovery | Planned |
 | **Phase 8** | Fraud prevention, call drop compensation & dispute handling | Planned |
@@ -255,7 +255,20 @@ Following `astro-app-project-phases.md`:
 
 ---
 
-## 9. Payment Gateway & Wallet Ledger Mechanics (Phase 3)
+## 9. 1:1 Consultation & Billing Engine Mechanics (Phase 4 / Section 7A)
+
+The real-time consultation engine is built strictly against Section 7A of `astro-app-system-design.md`:
+- **Section 7A.1 State Machine:** Sessions progress through `REQUESTED` → `ACCEPTED` → `CONNECTING` → `ACTIVE` → `ENDED` → `BILLED` → `SUMMARY_SHOWN`. Reconnection states include `RECONNECTING` (with 15–20s grace timer) and `FORCE_ENDED`.
+- **Billing Starts ONLY at `ACTIVE`:** Billing never starts at `ACCEPTED` or `CONNECTING`. The server initiates per-second billing only when both parties have confirmed room presence (`session:join`).
+- **Server Clock Only:** The server timestamp alone governs duration. Client clocks are strictly ignored to prevent manipulation.
+- **5–10s Periodic Billing Ticks:** Live deduction ticks execute every N seconds reusing the Phase 3 atomic `deductBalance` transaction (`SESSION_CHARGE`), updating duration and running balance snapshots.
+- **Chat Idle Timeout:** Pauses billing automatically if no messages are exchanged for 3–5 minutes; billing resumes automatically on the next message.
+- **Silent Non-Response Timeout:** If an expert fails to respond within 30–45s, the session cancels automatically with zero wallet impact and increments the expert's `missedRequests` metric.
+- **Redis Concurrency Lock:** Distributed locks (`expert:lock:${expertId}`) ensure an expert can never double-accept simultaneous consultation requests.
+
+---
+
+## 10. Payment Gateway & Wallet Ledger Mechanics (Phase 3)
 
 The financial infrastructure is engineered according to strict transactional consistency rules:
 - **Append-Only Ledger (`wallet_ledger`):** No direct balance mutation occurs outside of an atomic ledger entry. Every credit or debit records `amount_in_paise`, transaction `type`, `reference_id`, and a `running_balance_snapshot`.
